@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="es-MX" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover"
+    >
+
+    <meta
+        name="description"
+        content="Aether Studio crea experiencias digitales inmersivas, interfaces modernas y productos que conectan tecnología, diseño y emoción."
+    >
+
+    <meta
+        name="theme-color"
+        id="theme-color"
+        content="#070914"
+    >
+
+    <meta name="color-scheme" content="light dark">
+
+    <title>Aether Studio | Experiencias digitales inmersivas</title>
+
+    <!-- Evita un destello del tema incorrecto al cargar la página -->
+    <script>
+        (() => {
+            const storageKey = "aether-theme";
+
+            try {
+                const savedTheme = localStorage.getItem(storageKey);
+                const prefersDark = window.matchMedia(
+                    "(prefers-color-scheme: dark)"
+                ).matches;
+
+                const initialTheme =
+                    savedTheme === "light" || savedTheme === "dark"
+                        ? savedTheme
+                        : prefersDark
+                            ? "dark"
+                            : "light";
+
+                document.documentElement.dataset.theme = initialTheme;
+            } catch {
+                document.documentElement.dataset.theme = "dark";
+            }
+        })();
+    </script>
+
+    <!-- Fuente -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Bootstrap Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    >
+
+    <!-- Estilos principales -->
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <!-- Pantalla inicial de carga -->
+    <div
+        class="page-loader"
+        id="page-loader"
+        role="status"
+        aria-live="polite"
+    >
+        <div class="page-loader__content">
+            <span class="page-loader__symbol" aria-hidden="true">
+                <i class="bi bi-stars"></i>
+            </span>
+
+            <span class="page-loader__brand">AETHER</span>
+
+            <div class="page-loader__track" aria-hidden="true">
+                <span class="page-loader__progress"></span>
+            </div>
+
+            <span class="sr-only">Cargando experiencia</span>
+        </div>
+    </div>
+
+    <!-- Enlace de accesibilidad -->
+    <a class="skip-link" href="#main-content">
+        Saltar al contenido principal
+    </a>
+
+    <!--
+        Filtro SVG para la distorsión líquida.
+        Se aplicará únicamente sobre capas decorativas, no sobre textos.
+    -->
+    <svg
+        class="svg-filters"
+        width="0"
+        height="0"
+        aria-hidden="true"
+        focusable="false"
+    >
+        <defs>
+            <filter
+                id="liquid-distortion"
+                x="-25%"
+                y="-25%"
+                width="150%"
+                height="150%"
+                color-interpolation-filters="sRGB"
+            >
+                <feTurbulence
+                    id="liquid-noise"
+                    type="fractalNoise"
+                    baseFrequency="0.008 0.012"
+                    numOctaves="2"
+                    seed="7"
+                    result="noise"
+                ></feTurbulence>
+
+                <feDisplacementMap
+                    id="liquid-displacement"
+                    in="SourceGraphic"
+                    in2="noise"
+                    scale="28"
+                    xChannelSelector="R"
+                    yChannelSelector="B"
+                ></feDisplacementMap>
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- Escenario fijo de fondo -->
+    <div class="site-background" aria-hidden="true">
+        <canvas id="webgl-canvas"></canvas>
+
+        <div
+            class="ambient-light ambient-light--violet"
+            data-parallax="-0.08"
+        ></div>
+
+        <div
+            class="ambient-light ambient-light--cyan"
+            data-parallax="0.12"
+        ></div>
+
+        <div
+            class="ambient-light ambient-light--rose"
+            data-parallax="-0.05"
+        ></div>
+
+        <div class="background-grid"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <!-- Navegación -->
+    <header class="site-header" id="site-header">
+        <div class="container">
+            <div class="navbar glass-panel" data-glass>
+                <a
+                    class="brand"
+                    href="#inicio"
+                    aria-label="Aether Studio, ir al inicio"
+                >
+                    <span class="brand__mark" aria-hidden="true">
+                        <i class="bi bi-stars"></i>
+                    </span>
+
+                    <span class="brand__name">Aether</span>
+                </a>
+
+                <nav
+                    class="primary-nav"
+                    id="primary-nav"
+                    aria-label="Navegación principal"
+                >
+                    <ul class="primary-nav__list">
+                        <li>
+                            <a
+                                class="primary-nav__link is-active"
+                                href="#inicio"
+                                aria-current="page"
+                            >
+                                Inicio
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="primary-nav__link" href="#servicios">
+                                Servicios
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="primary-nav__link" href="#proyectos">
+                                Proyectos
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="primary-nav__link" href="#proceso">
+                                Proceso
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="navbar__actions">
+                    <!-- Cambio de tema -->
+                    <button
+                        class="theme-toggle"
+                        id="theme-toggle"
+                        type="button"
+                        aria-label="Cambiar al modo claro"
+                        title="Cambiar tema"
+                    >
+                        <span
+                            class="theme-toggle__icon theme-toggle__icon--sun"
+                            aria-hidden="true"
+                        >
+                            <i class="bi bi-sun-fill"></i>
+                        </span>
+
+                        <span
+                            class="theme-toggle__icon theme-toggle__icon--moon"
+                            aria-hidden="true"
+                        >
+                            <i class="bi bi-moon-stars-fill"></i>
+                        </span>
+
+                        <span class="theme-toggle__indicator"></span>
+                    </button>
+
+                    <a
+                        class="button button--compact button--primary navbar__cta"
+                        href="#contacto"
+                        data-magnetic
+                    >
+                        Hablemos
+
+                        <i
+                            class="bi bi-arrow-up-right"
+                            aria-hidden="true"
+                        ></i>
+                    </a>
+
+                    <!-- Menú móvil -->
+                    <button
+                        class="menu-toggle"
+                        id="menu-toggle"
+                        type="button"
+                        aria-label="Abrir menú"
+                        aria-controls="primary-nav"
+                        aria-expanded="false"
+                    >
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <!-- Hero -->
+        <section class="hero section" id="inicio">
+            <div class="container hero__container">
+                <div class="hero__content">
+                    <div
+                        class="eyebrow"
+                        data-reveal="up"
+                    >
+                        <span class="eyebrow__dot"></span>
+                        Estudio digital independiente
+                    </div>
+
+                    <h1 class="hero__title" data-reveal="up">
+                        Diseñamos futuros
+
+                        <span class="hero__title-accent">
+                            que se sienten reales.
+                        </span>
+                    </h1>
+
+                    <p
+                        class="hero__description"
+                        data-reveal="up"
+                    >
+                        Combinamos estrategia, diseño y tecnología para crear
+                        experiencias digitales inmersivas capaces de convertir
+                        ideas ambiciosas en productos memorables.
+                    </p>
+
+                    <div
+                        class="hero__actions"
+                        data-reveal="up"
+                    >
+                        <a
+                            class="button button--primary"
+                            href="#proyectos"
+                            data-magnetic
+                        >
+                            Explorar proyectos
+
+                            <i
+                                class="bi bi-arrow-right"
+                                aria-hidden="true"
+                            ></i>
+                        </a>
+
+                        <a
+                            class="button button--glass"
+                            href="#proceso"
+                            data-magnetic
+                        >
+                            <i
+                                class="bi bi-play-fill"
+                                aria-hidden="true"
+                            ></i>
+
+                            Nuestro proceso
+                        </a>
+                    </div>
+
+                    <div
+                        class="hero__proof"
+                        data-reveal="up"
+                    >
+                        <div
+                            class="avatar-stack"
+                            aria-hidden="true"
+                        >
+                            <span class="avatar avatar--one">N</span>
+                            <span class="avatar avatar--two">A</span>
+                            <span class="avatar avatar--three">L</span>
+                            <span class="avatar avatar--four">M</span>
+                        </div>
+
+                        <div class="hero__proof-copy">
+                            <div class="rating" aria-label="Calificación de 5 estrellas">
+                                <i class="bi bi-star-fill" aria-hidden="true"></i>
+                                <i class="bi bi-star-fill" aria-hidden="true"></i>
+                                <i class="bi bi-star-fill" aria-hidden="true"></i>
+                                <i class="bi bi-star-fill" aria-hidden="true"></i>
+                                <i class="bi bi-star-fill" aria-hidden="true"></i>
+                            </div>
+
+                            <p>
+                                Más de <strong>48 experiencias</strong> creadas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Composición tridimensional -->
+                <div class="hero-visual" id="hero-visual">
+                    <div
+                        class="hero-model-anchor"
+                        id="hero-model-anchor"
+                        aria-hidden="true"
+                    >
+                        <div class="liquid-orb-fallback"></div>
+                    </div>
+
+                    <article
+                        class="floating-card floating-card--performance glass-panel"
+                        data-glass
+                        data-tilt
+                        data-reveal="left"
+                    >
+                        <div class="floating-card__header">
+                            <span class="floating-card__icon">
+                                <i
+                                    class="bi bi-lightning-charge-fill"
+                                    aria-hidden="true"
+                                ></i>
+                            </span>
+
+                            <span>Rendimiento</span>
+                        </div>
+
+                        <div class="floating-card__value">
+                            98<span>%</span>
+                        </div>
+
+                        <div class="mini-chart" aria-hidden="true">
+                            <span style="--height: 35%"></span>
+                            <span style="--height: 52%"></span>
+                            <span style="--height: 46%"></span>
+                            <span style="--height: 72%"></span>
+                            <span style="--height: 65%"></span>
+                            <span style="--height: 88%"></span>
+                            <span style="--height: 100%"></span>
+                        </div>
+                    </article>
+
+                    <article
+                        class="floating-card floating-card--project glass-panel"
+                        data-glass
+                        data-tilt
+                        data-reveal="right"
+                    >
+                        <span class="floating-card__label">
+                            Proyecto destacado
+                        </span>
+
+                        <div class="floating-card__project">
+                            <span class="project-symbol" aria-hidden="true">
+                                <i class="bi bi-box"></i>
+                            </span>
+
+                            <div>
+                                <strong>Lumina OS</strong>
+                                <span>Experiencia inmersiva</span>
+                            </div>
+                        </div>
+
+                        <div class="floating-card__footer">
+                            <span>Diseño digital</span>
+                            <i
+                                class="bi bi-arrow-up-right"
+                                aria-hidden="true"
+                            ></i>
+                        </div>
+                    </article>
+
+                    <div
+                        class="floating-badge glass-panel"
+                        data-glass
+                        data-reveal="scale"
+                    >
+                        <span class="floating-badge__status"></span>
+                        Disponible para nuevos proyectos
+                    </div>
+                </div>
+            </div>
+
+            <a
+                class="scroll-indicator"
+                href="#servicios"
+                aria-label="Desplazarse a la sección de servicios"
+            >
+                <span>Descubre</span>
+
+                <i
+                    class="bi bi-arrow-down"
+                    aria-hidden="true"
+                ></i>
+            </a>
+        </section>
+
+        <!-- Marcas -->
+        <section class="brands" aria-label="Marcas que han confiado en nosotros">
+            <div class="container">
+                <div
+                    class="brands__panel glass-panel"
+                    data-glass
+                    data-reveal="up"
+                >
+                    <p class="brands__title">
+                        Ideas creadas junto a equipos de
+                    </p>
+
+                    <div class="brands__list">
+                        <span>NØRTH</span>
+                        <span>LUMINA</span>
+                        <span>MONOLITH</span>
+                        <span>SEREIN</span>
+                        <span>VERTEX</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Servicios -->
+        <section
+            class="services section"
+            id="servicios"
+            aria-labelledby="services-title"
+        >
+            <div class="container">
+                <div class="section-heading">
+                    <div>
+                        <span class="section-heading__index" data-reveal="up">
+                            01 / Servicios
+                        </span>
+
+                        <h2 id="services-title" data-reveal="up">
+                            Transformamos ideas en
+                            <span>experiencias extraordinarias.</span>
+                        </h2>
+                    </div>
+
+                    <p data-reveal="up">
+                        Construimos productos digitales con una identidad clara,
+                        interacciones precisas y tecnología pensada para crecer.
+                    </p>
+                </div>
+
+                <div class="services-grid">
+                    <article
+                        class="service-card glass-panel"
+                        data-glass
+                        data-tilt
+                        data-reveal="up"
+                    >
+                        <div class="service-card__top">
+                            <span class="service-card__icon">
+                                <i
+                                    class="bi bi-bezier2"
+                                    aria-hidden="true"
+                                ></i>
+                            </span>
+
+                            <span class="service-card__number">01</span>
+                        </div>
+
+                        <h3>Dirección digital</h3>
+
+                        <p>
+                            Definimos la estrategia, personalidad y arquitectura
+                            que convierten una idea en un producto coherente.
+                        </p>
+
+                        <ul class="tag-list" aria-label="Especialidades">
+                            <li>Estrategia</li>
+                            <li>UX Research</li>
+                            <li>Identidad</li>
+                        </ul>
+                    </article>
+
+                    <article
+                        class="service-card glass-panel"
+                        data-glass
+                        data-tilt
+                        data-reveal="up"
+                    >
+                        <div class="service-card__top">
+                            <span class="service-card__icon">
+                                <i
+                                    class="bi bi-layers-fill"
+                                    aria-hidden="true"
+                                ></i>
+                            </span>
+
+                            <span class="service-card__number">02</span>
+                        </div>
+
+                        <h3>Diseño de experiencias</h3>
+
+                        <p>
+                            Diseñamos interfaces expresivas, accesibles y
+                            fluidas que responden naturalmente a cada usuario.
+                        </p>
+
+                        <ul class="tag-list" aria-label="Especialidades">
+                            <li>UI Design</li>
+                            <li>Motion</li>
+                            <li>Prototipos</li>
+                        </ul>
+                    </article>
+
+                    <article
+                        class="service-card glass-panel"
+                        data-glass
+                        data-tilt
+                        data-reveal="up"
+                    >
+                        <div class="service-card__top">
+                            <span class="service-card__icon">
+                                <i
+                                    class="bi bi-code-slash"
+                                    aria-hidden="true"
+                                ></i>
+                            </span>
+
+                            <span class="service-card__number">03</span>
+                        </div>
+
+                        <h3>Tecnología creativa</h3>
+
+                        <p>
+                            Desarrollamos experiencias web rápidas e inmersivas
+                            combinando animación, interacción y entornos 3D.
+                        </p>
+
+                        <ul class="tag-list" aria-label="Especialidades">
+                            <li>Frontend</li>
+                            <li>WebGL</li>
+                            <li>Three.js</li>
+                        </ul>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Proyectos -->
+        <section
+            class="projects section"
+            id="proyectos"
+            aria-labelledby="projects-title"
+        >
+            <div class="container">
+                <div class="section-heading section-heading--projects">
+                    <div>
+                        <span class="section-heading__index" data-reveal="up">
+                            02 / Proyectos
+                        </span>
+
+                        <h2 id="projects-title" data-reveal="up">
+                            Una selección de mundos
+                            <span>que ya cobraron vida.</span>
+                        </h2>
+                    </div>
+
+                    <a
+                        class="text-link"
+                        href="#contacto"
+                        data-reveal="up"
+                    >
+                        Iniciar un proyecto
+
+                        <i
+                            class="bi bi-arrow-up-right"
+                            aria-hidden="true"
+                        ></i>
+                    </a>
+                </div>
+
+                <div class="projects-grid">
+                    <article
+                        class="project-card project-card--featured"
+                        data-tilt
+                        data-reveal="up"
+                    >
+                        <div class="project-card__visual project-visual project-visual--lumina">
+                            <div class="project-visual__grid"></div>
+                            <div class="project-visual__orb"></div>
+
+                            <span class="project-visual__label glass-panel">
+                                Interfaz inteligente
+                            </span>
+                        </div>
+
+                        <div class="project-card__content">
+                            <div>
+                                <span class="project-card__category">
+                                    Producto digital · 2026
+                                </span>
+
+                                <h3>Lumina OS</h3>
+
+                                <p>
+                                    Un sistema inteligente diseñado para volver
+                                    lo complejo sorprendentemente natural.
+                                </p>
+                            </div>
+
+                            <a
+                                class="project-card__link"
+                                href="#contacto"
+                                aria-label="Conocer el proyecto Lumina OS"
+                            >
+                                <i
+                                    class="bi bi-arrow-up-right"
+                                    aria-hidden="true"
+                                ></i>
+                            </a>
+                        </div>
+                    </article>
+
+                    <article
+                        class="project-card"
+                        data-tilt
+                        data-reveal="up"
+                    >
+                        <div class="project-card__visual project-visual project-visual--nomad">
+                            <div class="project-visual__rings"></div>
+                            <div class="project-visual__sphere"></div>
+
+                            <span class="project-visual__label glass-panel">
+                                Travel experience
+                            </span>
+                        </div>
+
+                        <div class="project-card__content">
+                            <div>
+                                <span class="project-card__category">
+                                    Plataforma · 2026
+                                </span>
+
+                                <h3>Nomad One</h3>
+
+                                <p>
+                                    Una nueva forma de descubrir destinos,
+                                    culturas y experiencias personales.
+                                </p>
+                            </div>
+
+                            <a
+                                class="project-card__link"
+                                href="#contacto"
+                                aria-label="Conocer el proyecto Nomad One"
+                            >
+                                <i
+                                    class="bi bi-arrow-up-right"
+                                    aria-hidden="true"
+                                ></i>
+                            </a>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Proceso -->
+        <section
+            class="process section"
+            id="proceso"
+            aria-labelledby="process-title"
+        >
+            <div class="container">
+                <div
+                    class="process-panel glass-panel"
+                    data-glass
+                    data-reveal="up"
+                >
+                    <div class="process-panel__heading">
+                        <span class="section-heading__index">
+                            03 / Proceso
+                        </span>
+
+                        <h2 id="process-title">
+                            Del primer trazo a una
+                            <span>experiencia viva.</span>
+                        </h2>
+                    </div>
+
+                    <div class="process-list">
+                        <article class="process-step">
+                            <span class="process-step__number">01</span>
+
+                            <div>
+                                <h3>Descubrimos</h3>
+
+                                <p>
+                                    Investigamos el contexto, las personas y las
+                                    oportunidades detrás de cada proyecto.
+                                </p>
+                            </div>
+
+                            <i
+                                class="bi bi-compass"
+                                aria-hidden="true"
+                            ></i>
+                        </article>
+
+                        <article class="process-step">
+                            <span class="process-step__number">02</span>
+
+                            <div>
+                                <h3>Diseñamos</h3>
+
+                                <p>
+                                    Construimos el lenguaje visual, los recorridos
+                                    y cada interacción significativa.
+                                </p>
+                            </div>
+
+                            <i
+                                class="bi bi-vector-pen"
+                                aria-hidden="true"
+                            ></i>
+                        </article>
+
+                        <article class="process-step">
+                            <span class="process-step__number">03</span>
+
+                            <div>
+                                <h3>Damos vida</h3>
+
+                                <p>
+                                    Convertimos la propuesta en una experiencia
+                                    digital fluida, rápida y memorable.
+                                </p>
+                            </div>
+
+                            <i
+                                class="bi bi-rocket-takeoff"
+                                aria-hidden="true"
+                            ></i>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Métricas -->
+        <section class="metrics section" aria-label="Resultados del estudio">
+            <div class="container">
+                <div class="metrics-grid">
+                    <article class="metric" data-reveal="up">
+                        <p class="metric__value">
+                            <span data-counter="48">48</span>+
+                        </p>
+
+                        <h3>Experiencias creadas</h3>
+                    </article>
+
+                    <article class="metric" data-reveal="up">
+                        <p class="metric__value">
+                            <span data-counter="12">12</span>
+                        </p>
+
+                        <h3>Reconocimientos digitales</h3>
+                    </article>
+
+                    <article class="metric" data-reveal="up">
+                        <p class="metric__value">
+                            <span data-counter="96">96</span>%
+                        </p>
+
+                        <h3>Clientes que regresan</h3>
+                    </article>
+
+                    <article class="metric" data-reveal="up">
+                        <p class="metric__value">
+                            <span data-counter="7">7</span>
+                        </p>
+
+                        <h3>Países alcanzados</h3>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contacto -->
+        <section
+            class="contact section"
+            id="contacto"
+            aria-labelledby="contact-title"
+        >
+            <div class="container">
+                <div
+                    class="contact-card glass-panel"
+                    data-glass
+                    data-reveal="scale"
+                >
+                    <div class="contact-card__glow" aria-hidden="true"></div>
+
+                    <span class="contact-card__label">
+                        ¿Tienes una idea ambiciosa?
+                    </span>
+
+                    <h2 id="contact-title">
+                        Construyamos algo que nadie pueda ignorar.
+                    </h2>
+
+                    <p>
+                        Cuéntanos sobre tu siguiente proyecto y descubramos
+                        juntos hasta dónde puede llegar.
+                    </p>
+
+                    <a
+                        class="button button--primary button--large"
+                        href="mailto:hola@aether.studio"
+                        data-magnetic
+                    >
+                        hola@aether.studio
+
+                        <i
+                            class="bi bi-arrow-up-right"
+                            aria-hidden="true"
+                        ></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="site-footer__content">
+                <a
+                    class="brand"
+                    href="#inicio"
+                    aria-label="Aether Studio, volver al inicio"
+                >
+                    <span class="brand__mark" aria-hidden="true">
+                        <i class="bi bi-stars"></i>
+                    </span>
+
+                    <span class="brand__name">Aether</span>
+                </a>
+
+                <p>
+                    Diseñando experiencias digitales desde México para el mundo.
+                </p>
+
+                <div class="site-footer__links">
+                    <a href="#servicios">Servicios</a>
+                    <a href="#proyectos">Proyectos</a>
+                    <a href="#proceso">Proceso</a>
+                    <a href="mailto:hola@aether.studio">Contacto</a>
+                </div>
+            </div>
+
+            <div class="site-footer__bottom">
+                <p>
+                    &copy; <span id="current-year">2026</span>
+                    Aether Studio. Todos los derechos reservados.
+                </p>
+
+                <a href="#inicio">
+                    Volver arriba
+
+                    <i
+                        class="bi bi-arrow-up"
+                        aria-hidden="true"
+                    ></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <noscript>
+        <div class="noscript-message">
+            Esta experiencia necesita JavaScript para mostrar las animaciones
+            y el escenario tridimensional.
+        </div>
+    </noscript>
+
+    <!-- Interfaz y animaciones -->
+    <script src="index.js" defer></script>
+
+    <!-- Escenario Three.js -->
+    <script src="./scene.js" type="module"></script>
+</body>
+
+</html>
